@@ -1,136 +1,145 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-
 </script>
 
 <template>
   <v-layout>
-    <v-app-bar class="pl-4">
-      <ul class="d-flex ma-0 navigation">
-        <li><RouterLink to="/">Migração</RouterLink></li>
-        <li class="ml-4"><RouterLink to="/progresso">Progresso</RouterLink></li>
-      </ul>
+    <v-app-bar class="app-bar" elevation="2">
+      <div class="nav-container">
+        <ul class="navigation">
+          <li><RouterLink to="/" class="nav-link">Migração</RouterLink></li>
+          <li><RouterLink to="/progresso" class="nav-link">Progresso</RouterLink></li>
+        </ul>
+      </div>
       <v-spacer></v-spacer>
-      <v-card-title class="non-mobile">Sistema de Apoio à Migração de Grade de BSI (SAMG BSI)</v-card-title>
-      <v-card-title class="mobile">SAMG BSI</v-card-title>
+      <div class="app-title-container">
+        <v-card-title class="app-title non-mobile">Sistema de Apoio à Migração de Grade de BSI</v-card-title>
+        <v-card-title class="app-title mobile">SAMG BSI</v-card-title>
+      </div>
+      <v-spacer></v-spacer>
     </v-app-bar>
     <v-main>
       <RouterView />
+      <footer class="app-footer">
+        <p>
+          💙 Baseado no TCC de 
+          <a href="https://github.com/Jowjowjowjowjow/samg" target="_blank" rel="noopener">Jow</a>
+          - Agora, 100% client-side, sem necessidade de servidor.
+        </p>
+      </footer>
     </v-main>
-    
   </v-layout>
-
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.app-bar {
+  background: #1e1f24 !important; /* Cor surface do tema dark */
+  border-bottom: 1px solid #2e3036;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
+.nav-container {
+  padding-left: 16px;
 }
 
 .navigation {
   list-style-type: none;
-  color: black;
-  border-right: 1px solid black;
-  height: 100%;
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
   align-items: center;
-  
 }
 
-.navigation li:first-child {
-  border-right: 1px solid black;
-  
+.nav-link {
+  color: #9aa0a6 !important; /* Cor secundária */
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-.navigation li {
-  padding-right: 14px;
-  height: 100%;
-  padding-top: 16px;
+.nav-link:hover {
+  color: #e0e2e6 !important;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.navigation a:hover {
-  background-color: transparent;
-  color: black;
+.nav-link.router-link-exact-active {
+  color: #3b82f6 !important; /* Cor primária */
+  background-color: rgba(59, 130, 246, 0.1);
 }
 
-.navigation a{
-  color: black;
-  font-size: 18px;
-  font-weight: 400;
+.app-title-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none; /* Permite clicar nos links abaixo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-title {
+  color: #e0e2e6 !important;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 24px 16px;
+  margin-top: auto; /* Empurra footer para baixo */
+  background: #1e1f24; /* Cor surface */
+  border-top: 1px solid #2e3036;
+}
+
+.app-footer p {
+  margin: 0;
+  color: #9aa0a6;
+  font-size: 14px;
+}
+
+.app-footer a {
+  color: #3b82f6;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.app-footer a:hover {
+  color: #60a5fa;
   text-decoration: underline;
 }
 
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
 @media (min-width: 768px) {
   .non-mobile {
-    display: contents !important;
+    display: block !important;
   }
-
   .mobile {
     display: none;
   }
 }
-@media (min-width: 280px) {
+
+@media (max-width: 767px) {
   .non-mobile {
     display: none;
   }
-
+  .mobile {
+    display: block !important;
+  }
+  .app-title {
+    font-size: 16px;
+  }
+  .nav-link {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  .app-title-container {
+      position: static;
+      justify-content: flex-end;
+      padding-right: 16px;
+  }
 }
-
 </style>

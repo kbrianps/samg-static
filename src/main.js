@@ -16,11 +16,31 @@ import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
-import { mdiEye, mdiEyeOff, mdiCheckCircle, mdiCheckboxBlankCircle, mdiSquare, mdiAlertCircle, mdiAlphaXCircle} from '@mdi/js'
+import { mdiEye, mdiEyeOff, mdiCheckCircle, mdiCheckboxBlankCircle, mdiSquare, mdiAlertCircle, mdiAlphaXCircle } from '@mdi/js'
+
+const samgDark = {
+    dark: true,
+    colors: {
+        background: '#0f1012',
+        surface: '#1e1f24',
+        primary: '#3b82f6',
+        secondary: '#4b5563',
+        error: '#ef4444',
+        info: '#3b82f6',
+        success: '#10b981',
+        warning: '#f59e0b',
+    }
+}
 
 const vuetify = createVuetify({
     components,
     directives,
+    theme: {
+        defaultTheme: 'samgDark',
+        themes: {
+            samgDark,
+        }
+    },
     icons: {
         defaultSet: 'mdi',
         aliases: {

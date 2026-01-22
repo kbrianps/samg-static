@@ -1,14 +1,56 @@
 <template>
-    <v-container fluid class="historicoIntegralizacao">
-        <v-row>
-            <v-col cols="12">
-                <v-file-input
-                    label="Usar o histórico emitido no portal do aluno em 'Relatórios >> Histórico Integralização'"
-                    variant="solo" ref="historicoIntegralizacao" @change="lerPlanilhaDisciplinas"></v-file-input>
+    <v-container fluid class="historico pa-6">
+        <v-row justify="center" class="mb-6">
+            <v-col cols="12" md="10" lg="8">
+                <v-card class="elevation-4 rounded-lg" color="surface">
+                    <v-card-text class="pa-6">
+                        <v-file-input
+                            label="Upload do Histórico de Integralização (SIE)"
+                            placeholder="Selecione o arquivo PDF..."
+                            prepend-icon="mdi-file-chart"
+                            variant="outlined"
+                            density="comfortable"
+                            accept="application/pdf"
+                            show-size
+                            clearable
+                            ref="historicoIntegralizacao"
+                            @change="lerPlanilhaDisciplinas"
+                            :error-messages="errorMessage"
+                            hide-details="auto"
+                        >
+                            <template v-slot:selection="{ fileNames }">
+                                <span class="text-primary font-weight-medium">{{ fileNames[0] }}</span>
+                            </template>
+                        </v-file-input>
+                        <div class="text-caption text-medium-emphasis mt-2 ml-4">
+                            <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                            Use o arquivo emitido em 'Relatórios >> Histórico Integralização'
+                        </div>
+                    </v-card-text>
+                </v-card>
             </v-col>
         </v-row>
 
-        <CurriculoNovo :disciplinas-cursadas="progressoAluno" />
+        <v-row justify="center">
+            <v-col cols="12">
+                 <CurriculoNovo :disciplinas-cursadas="progressoAluno" />
+            </v-col>
+        </v-row>
+
+        <v-snackbar
+            v-model="snackbar.show"
+            :color="snackbar.color"
+            :timeout="5000"
+            location="top"
+        >
+            <div class="d-flex align-center">
+                <v-icon :icon="snackbar.icon" class="mr-2"></v-icon>
+                {{ snackbar.message }}
+            </div>
+            <template v-slot:actions>
+                <v-btn variant="text" @click="snackbar.show = false">Fechar</v-btn>
+            </template>
+        </v-snackbar>
 
     </v-container>
 </template>
@@ -18,7 +60,7 @@ import curriculoNovoOptativas from '../assets/Disciplinas Optativas - Curriculo 
 import CaixaDisciplina from '../components/CaixaDisciplina.vue';
 import DetalhesDisciplina from '../components/DetalhesDisciplina.vue';
 
-import instance from '../api/instance';
+import { parseIntegralizacaoPdf } from '../services/integralizacaoParser';
 import CurriculoNovo from '../components/CurriculoNovoIntegralizacao.vue';
 
 
@@ -33,23 +75,63 @@ export default {
             historico: [],
             progressoAluno: [],
             periodos: 8,
+            
+             // Controle de Erros e UI
+            errorMessage: '',
+            snackbar: {
+                show: false,
+                message: '',
+                color: 'error',
+                icon: 'mdi-alert-circle'
+            }
         }
     },
 
     methods: {
-        async lerPlanilhaDisciplinas() {
-            const arquivo = this.$refs.historicoIntegralizacao.files[0];
-            const formData = new FormData();
-            formData.append('file', arquivo);
-            try {
-                const jsonDisciplinasAluno = await instance.post("uploadIntegralizacao", formData, { headers: { 'Content-Type': 'multipart/form-data;boundary=boundary' } })
-                this.historico = JSON.parse(JSON.stringify(jsonDisciplinasAluno.data.disciplinas));
-                this.lerHistorico();
-            } catch (error) {
-                console.error(error)
-                this.historico = [];
-            }
+        showFeedback(message, type = 'error') {
+            // Apenas exibe erro, ignorando sucesso conforme solicitado
+            if (type !== 'error') return;
+            
+            this.snackbar = {
+                show: true,
+                message,
+                color: 'error',
+                icon: 'mdi-alert-circle'
+            };
+        },
 
+        async lerPlanilhaDisciplinas() {
+            this.errorMessage = '';
+            const fileInput = this.$refs.historicoIntegralizacao;
+            const arquivo = fileInput.files[0];
+            
+            if (!arquivo) return;
+
+            try {
+                const disciplinas = await parseIntegralizacaoPdf(arquivo);
+                
+                 if (!disciplinas || disciplinas.length === 0) {
+                    throw new Error("Nenhuma disciplina encontrada. Verifique se o PDF está correto.");
+                }
+
+                // Validação básica
+                const isValid = disciplinas.some(d => d.codigo && d.situacao);
+                 if (!isValid) {
+                     throw new Error("O PDF enviado não parece ser um histórico de integralização válido.");
+                }
+
+                this.historico = disciplinas;
+                this.lerHistorico();
+                // ChatMessage: removido feedback de sucesso
+
+            } catch (error) {
+                console.error(error);
+                this.historico = [];
+                this.progressoAluno = []; // Limpa visualização anterior
+                this.errorMessage = "Falha ao ler o arquivo";
+                this.showFeedback(error.message || "Erro ao processar o PDF.", 'error');
+                fileInput.reset();
+            }
         },
 
         lerHistorico() {
@@ -108,31 +190,3 @@ export default {
     components: { CaixaDisciplina, DetalhesDisciplina, CurriculoNovo }
 }
 </script>
-
-<style lang="css" scoped>
-.historico {
-    min-width: 80vw;
-    margin-bottom: 24px;
-}
-
-.borda-coluna {
-    border-right: 1px solid #BDBDBD;
-}
-
-.borda-linha {
-    border-bottom: 1px solid #BDBDBD;
-}
-
-.warning {
-    color: #EF5350;
-}
-
-.link-equivalencias {
-    text-decoration: underline;
-}
-
-.link-equivalencias:hover {
-    text-decoration: underline;
-    background: #1a1a1a;
-}
-</style>

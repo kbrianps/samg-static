@@ -1,67 +1,96 @@
 <template>
-    <v-row>
-        <v-col cols="12" class="d-flex align-center">
-            <v-card-title>Currículo novo</v-card-title>
+    <v-row class="px-2">
+        <v-col cols="12" class="d-flex align-center flex-wrap pt-6 pb-2">
+            <v-card-title>Currículo Novo</v-card-title>
             <v-spacer></v-spacer>
         </v-col>
+        
         <v-col v-show="ver" v-for="i in periodos" :key="i" class="pa-6" :class="{ 'borda-coluna': i < 8 }">
-            <div class="mb-8 borda-linha">{{ `${i}° período` }}</div>
+            <div class="mb-8 borda-linha text-center">{{ `${i}° período` }}</div>
 
-            <v-row v-if="disciplinasCursadas.length" v-for="disciplina in disciplinasCursadas" :key="disciplina.Codigo">
-                <CaixaDisciplina v-if="disciplina.PeriodoRecomendado === i" @click="disciplinaSelecionada = disciplina"
-                    :disciplina="disciplina" class="mb-4" :status="status(disciplina)" :cor="pegaCorEixo(disciplina?.Eixo)" />
+            <div class="d-flex flex-wrap justify-center gap-2">
+                <template v-if="disciplinasCursadas.length">
+                    <template v-for="disciplina in disciplinasCursadas" :key="disciplina.Codigo">
+                        <CaixaDisciplina 
+                            v-if="disciplina.PeriodoRecomendado === i" 
+                            @click="disciplinaSelecionada = disciplina"
+                            :disciplina="disciplina" 
+                            class="mb-2" 
+                            :status="status(disciplina)" 
+                            :cor="pegaCorEixo(disciplina?.Eixo)" 
+                        />
+                    </template>
+                </template>
+                <template v-else>
+                    <template v-for="disciplina in disciplinasObrigatorias" :key="disciplina.Codigo + 'index'">
+                         <CaixaDisciplina 
+                            v-if="disciplina.PeriodoRecomendado === i" 
+                            @click="disciplinaSelecionada = disciplina"
+                            :disciplina="disciplina" 
+                            class="mb-2" 
+                            :cor="pegaCorEixo(disciplina?.Eixo)" 
+                        />
+                    </template>
+                </template>
+            </div>
+        </v-col>
+        
+        <v-col v-show="ver" cols="12" class="mt-6">
+            <v-divider class="mb-4"></v-divider>
+            
+            <v-row>
+                <v-col cols="12" md="6">
+                    <div class="text-caption font-weight-bold mb-2 text-medium-emphasis">EIXOS TEMÁTICOS</div>
+                    <div class="d-flex flex-column">
+                        <div v-for="legenda in legendas" :key="legenda.eixo" class="d-flex align-center mb-1 legenda-item">
+                            <div class="color-box mr-2 rounded-circle border" :style="{ backgroundColor: legenda.cor }"></div>
+                            <span class="text-caption">{{ legenda.eixo }}</span>
+                        </div>
+                    </div>
+                </v-col>
+                
+                <v-col cols="12" md="6" class="mt-4 mt-md-0">
+                    <div class="text-caption font-weight-bold mb-2 text-medium-emphasis">SITUAÇÃO</div>
+                    <div class="d-flex flex-column">
+                        <div class="d-flex align-center mb-1"><v-icon icon="$check" color="success" size="small" class="mr-2"></v-icon><span class="text-caption">Aprovado / Aprovado sem nota</span></div>
+                        <div class="d-flex align-center mb-1"><v-icon icon="$check" color="warning" size="small" class="mr-2"></v-icon><span class="text-caption">Dispensa com nota / Dispensa sem nota</span></div>
+                        <div class="d-flex align-center mb-1"><v-icon icon="$x" color="orange" size="small" class="mr-2"></v-icon><span class="text-caption">Reprovado sem nota</span></div>
+                        <div class="d-flex align-center mb-1"><v-icon icon="$x" color="error" size="small" class="mr-2"></v-icon><span class="text-caption">Reprovado por nota / Reprovado por falta</span></div>
+                        <div class="d-flex align-center mb-1"><v-icon icon="$unCheck" color="grey-darken-2" size="small" class="mr-2"></v-icon><span class="text-caption">Disciplina por fazer</span></div>
+                        <div class="d-flex align-center"><v-icon icon="$alert" color="deep-orange-darken-3" size="small" class="mr-2"></v-icon><span class="text-caption">Necessário pedir dispensa na secretaria</span></div>
+                    </div>
+                </v-col>
             </v-row>
-            <v-row v-else v-for="disciplina in disciplinasObrigatorias" :key="disciplina.Codigo + 'index'">
-                <CaixaDisciplina v-if="disciplina.PeriodoRecomendado === i" @click="disciplinaSelecionada = disciplina"
-                    :disciplina="disciplina" class="mb-4" :cor="pegaCorEixo(disciplina?.Eixo)" />
-            </v-row>
-        </v-col>
-        <v-col v-show="ver" cols="12">
-            <v-list class="d-flex flex-row flex-wrap">
-                <v-list-item v-for="legenda in legendas" :key="legenda.eixo">
-                    <v-icon icon="$square" :color="legenda.cor" class="mr-2" small></v-icon>
-                    <span>{{ legenda.eixo }}</span>
-                </v-list-item>
-            </v-list>
         </v-col>
 
-        <v-col cols="12">
-            <v-list class="d-flex flex-row flex-wrap">
-                <v-list-item v-for="legenda in legendasStatus" :key="legenda.eixo">
-                    <v-icon :icon="legenda.icon" :color="legenda.cor" class="mr-2" small></v-icon>
-                    <span>{{ legenda.status === "Matricula"? "Disciplina por fazer": legenda.status  }}</span>
-                </v-list-item>
-            </v-list>
-        </v-col>
-
-        <v-dialog v-if="disciplinaSelecionada !== null" v-model="disciplinaSelecionada">
+        <v-dialog v-if="disciplinaSelecionada !== null" v-model="disciplinaSelecionada" width="500">
             <DetalhesDisciplina :disciplina="disciplinaSelecionada" />
         </v-dialog>
     </v-row>
 </template>
 <script>
-import { mdiPackageVariantClosedRemove } from '@mdi/js';
 import curriculoNovoObrigatorias from '../assets/Disciplinas Obrigatórias - Currículo novo.json';
 import CaixaDisciplina from './CaixaDisciplina.vue';
 import DetalhesDisciplina from './DetalhesDisciplina.vue';
 
+// Cores vibrantes e distintas para o tema dark
 const EIXO_COR = [
-    { eixo: "Atividades complementares", cor: "#78909C" },
-    { eixo: "Atividades de extensão", cor: "#6D4C41" },
-    { eixo: "Trabalho de conclusão de curso", cor: "#00ACC1" },
-    { eixo: "Infraestrutura em SI", cor: "#F06292" },
-    { eixo: "Engenharia de Dados e Informação", cor: "#81C784" },
-    { eixo: "Desenvolvimento de Software para SI (Engenharia de Software)", cor: "#5C6BC0" },
-    { eixo: "Desenvolvimento de Software para SI (Programação e Algoritmos)", cor: "#64B5F6" },
-    { eixo: "Gestão de SI e TI, Empreendedorismo e Inovação", cor: "#7E57C2" },
-    { eixo: "Visão Sistêmica (Fundamentos de Matemática)", cor: "#FFCC80" },
-    { eixo: "Visão Sistêmica (Sistemas de Informação)", cor: "#FFFF00" },
+    { eixo: "Atividades complementares", cor: "#607D8B" },      // Blue Grey
+    { eixo: "Atividades de extensão", cor: "#795548" },         // Brown
+    { eixo: "Trabalho de conclusão de curso", cor: "#00BCD4" }, // Cyan (Bright)
+    { eixo: "Infraestrutura em SI", cor: "#E91E63" },          // Pink
+    { eixo: "Engenharia de Dados e Informação", cor: "#4CAF50" }, // Green
+    { eixo: "Desenvolvimento de Software para SI (Engenharia de Software)", cor: "#3F51B5" }, // Indigo
+    { eixo: "Desenvolvimento de Software para SI (Programação e Algoritmos)", cor: "#2196F3" }, // Blue
+    { eixo: "Gestão de SI e TI, Empreendedorismo e Inovação", cor: "#9C27B0" }, // Purple
+    { eixo: "Visão Sistêmica (Fundamentos de Matemática)", cor: "#FF5722" },    // Deep Orange
+    { eixo: "Visão Sistêmica (Sistemas de Informação)", cor: "#FFC107" },       // Amber
 ]
 
 const EIXO_COR_STATUS = [
-    { status: "Vencido", cor: "green", icon: "$check" },
-    { status: "Matricula/Cursand", cor: "orange", icon: "$unCheck" },
-    { status: "Não vencido", cor: "Black", icon: "$unCheck" },
+    { status: "Vencido", cor: "success", icon: "mdi-check-circle" },
+    { status: "Matrícula/Cursando", cor: "info", icon: "mdi-school" },
+    { status: "Não vencido", cor: "grey", icon: "mdi-circle-outline" },
 ]
 
 
@@ -84,28 +113,38 @@ export default {
         legendasStatus: EIXO_COR_STATUS
     }),
     methods: {
-        corPorStatus(situacao) {
-            if (!situacao) return "Black";
-            switch (situacao.toLowerCase()) {
-                case "vencido": return "green";
-                case "matricula/cursand": return "orange";
-                case "nao vencido": return "Black";
-                default: return "Black";
-            }
-        },
         status(disciplina) {
             if (!disciplina || !disciplina.Situacao) return { ver: "uncheck", cor: ""};
             switch (disciplina.Situacao.toLowerCase()) {
-                case "vencido": return { ver: "check", cor: "green"};
-                case "não vencido": return { ver: "uncheck", cor: "Black"};
-                case "matricula/cursand": return { ver: "", cor: "orange"};
+                case "vencido": return { ver: "check", cor: "success"};
+                case "não vencido": return { ver: "uncheck", cor: "grey"};
+                case "matricula/cursand": return { ver: "school", cor: "info"};
                 default: return { ver: "uncheck", cor: ""};
             }
         },
         pegaCorEixo(eixo){
-            return this.eixoCor.find(arrayEixo => arrayEixo.eixo === eixo)? this.eixoCor.find(arrayEixo => arrayEixo.eixo === eixo).cor : '#BDBDBD'  
+            return this.eixoCor.find(arrayEixo => arrayEixo.eixo === eixo)?.cor || '#37474F'  
         }
     },
     components: { DetalhesDisciplina, CaixaDisciplina }
 }
 </script>
+<style scoped>
+.borda-coluna {
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.color-box {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+.legenda-item {
+    min-width: 200px;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+</style>

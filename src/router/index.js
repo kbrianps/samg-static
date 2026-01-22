@@ -1,11 +1,15 @@
-import { createRouter, createWebHashHistory  } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Migracao from '../views/Migracao.vue'
 import Progresso from '../views/Progresso.vue'
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes: [
     {
       path: '/',
+      redirect: '/migracao'
+    },
+    {
+      path: '/migracao',
       name: 'migracao',
       component: Migracao
     },

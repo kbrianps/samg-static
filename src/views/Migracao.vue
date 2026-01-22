@@ -1,39 +1,110 @@
 <template>
-    <v-container fluid class="historico">
-        <v-row>
-            <strong class="warning text-h5 text-center">AVISO: este simulador foi elaborado apenas com propósitos informacionais e não deve ser
-                considerado como uma garantia de situação após a migração curricular. Leia os anexos do Projeto Pedagógico
-                de Curso (PPC) e as comunicações oficiais da Coordenação para mais informações.</strong>
-        </v-row>
-        <v-row>
-            <v-col cols="12">
-                <v-file-input label="Usar o histórico emitido no portal do aluno em 'Relatórios >> Histórico Escolar CR - Aprovados (SIE)'" variant="solo" ref="historico"
-                    @change="lerPlanilhaDisciplinas"></v-file-input>
+    <v-container fluid class="historico pa-6">
+        <v-row justify="center">
+            <v-col cols="12" md="10" lg="8">
+                <v-card class="elevation-4 rounded-lg" color="surface">
+                    <v-card-text class="pa-6">
+                        <v-file-input
+                            label="Upload do Histórico Escolar (SIE)"
+                            placeholder="Selecione o arquivo PDF..."
+                            prepend-icon="mdi-file-pdf-box"
+                            variant="outlined"
+                            density="comfortable"
+                            accept="application/pdf"
+                            show-size
+                            clearable
+                            ref="historico"
+                            @change="lerPlanilhaDisciplinas"
+                            :error-messages="errorMessage"
+                            hide-details="auto"
+                        >
+                            <template v-slot:selection="{ fileNames }">
+                                <span class="text-primary font-weight-medium">{{ fileNames[0] }}</span>
+                            </template>
+                        </v-file-input>
+                        <div class="text-caption text-medium-emphasis mt-2 ml-4">
+                            <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                            Use o arquivo emitido em 'Relatórios >> Histórico Escolar CR - Aprovados'
+                        </div>
+                    </v-card-text>
+                </v-card>
             </v-col>
         </v-row>
-        <CurriculoAtual :disciplinas-cursadas="progressoAlunoGrade" />
 
-        <v-col class="text-center">
-            <v-btn :disabled="!naoEquivalentes.length" text
-                @click="verDisciplinasNaoAproveitadas = !verDisciplinasNaoAproveitadas">Disciplinas não
-                aproveitadas</v-btn>
+        <div class="mt-8">
+            <CurriculoAtual :disciplinas-cursadas="progressoAlunoGrade" />
+        </div>
+
+        <v-col class="d-flex justify-center my-8">
+            <v-badge
+                :content="naoEquivalentes.length || '0'"
+                :color="naoEquivalentes.length ? 'error' : 'grey'"
+                floating
+            >
+                <v-btn
+                    color="primary"
+                    variant="outlined"
+                    size="large"
+                    @click="verDisciplinasNaoAproveitadas = !verDisciplinasNaoAproveitadas"
+                >
+                    Disciplinas não aproveitadas
+                </v-btn>
+            </v-badge>
         </v-col>
 
-        <CurriculoNovo :disciplinas-cursadas="progressoAlunoGradeNova" />
+        <div class="mb-8">
+            <CurriculoNovo :disciplinas-cursadas="progressoAlunoGradeNova" />
+        </div>
 
-        <v-row justify="center">
-            <v-dialog v-model="verDisciplinasNaoAproveitadas" width="420px">
-                <v-card flat>
-                    <v-list>
-                        <v-list-item v-for="disciplina in naoEquivalentes" :key="disciplina.Codigo">
-                            <p>Nome: {{ disciplina.Nome }}</p>
-                            <p>Código: {{ disciplina.Codigo }}</p>
-                        </v-list-item>
-                        <p class="text-center warning font-weight-bold">Consulte seu professor tutor para saber a situação das disciplinas acima e/ou <a class="text-center warning font-weight-bold link-equivalencias" href="https://docs.google.com/spreadsheets/d/1sy8dg5g71ShyxwP7jZld7-yV3u0GTqqfIPGLc33NWTA/edit" target="_blank">consulte o arquivo "Reforma: equivalências e dispensas" disponível no classroom Reforma Curricular BSI</a></p>
-                    </v-list>
-                </v-card>
-            </v-dialog>
-        </v-row>
+        <v-dialog v-model="verDisciplinasNaoAproveitadas" width="500px">
+            <v-card class="rounded-lg">
+                <v-card-title class="bg-surface pa-4 border-bottom">
+                    Disciplinas sem Equivalência Direta
+                </v-card-title>
+                <v-list class="bg-background" lines="two">
+                    <v-list-item
+                        v-for="disciplina in naoEquivalentes"
+                        :key="disciplina.Codigo"
+                        class="border-bottom"
+                    >
+                        <template v-slot:prepend>
+                            <v-avatar color="surface" variant="flat">
+                                <span class="text-caption font-weight-bold">{{ disciplina.Codigo.substring(0,3) }}</span>
+                            </v-avatar>
+                        </template>
+                        <v-list-item-title class="font-weight-medium">{{ disciplina.Nome }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ disciplina.Codigo }}</v-list-item-subtitle>
+                    </v-list-item>
+                </v-list>
+                <v-card-text class="bg-warning-lighten-5 pa-4 text-center">
+                    <p class="text-caption text-warning-darken-2 font-weight-bold mb-0">
+                        Consulte seu tutor ou o arquivo "Reforma: equivalências e dispensas" no Classroom.
+                    </p>
+                    <a href="https://docs.google.com/spreadsheets/d/1sy8dg5g71ShyxwP7jZld7-yV3u0GTqqfIPGLc33NWTA/edit" target="_blank" class="text-caption text-decoration-underline font-weight-bold text-primary mt-2 d-inline-block">
+                        Abrir planilha de equivalências
+                    </a>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" variant="text" @click="verDisciplinasNaoAproveitadas = false">Fechar</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <v-snackbar
+            v-model="snackbar.show"
+            :color="snackbar.color"
+            :timeout="5000"
+            location="top"
+        >
+            <div class="d-flex align-center">
+                <v-icon :icon="snackbar.icon" class="mr-2"></v-icon>
+                {{ snackbar.message }}
+            </div>
+            <template v-slot:actions>
+                <v-btn variant="text" @click="snackbar.show = false">Fechar</v-btn>
+            </template>
+        </v-snackbar>
     </v-container>
 </template>
 <script>
@@ -45,7 +116,7 @@ import dePara from '../assets/De - Para.json';
 import CaixaDisciplina from '../components/CaixaDisciplina.vue';
 import DetalhesDisciplina from '../components/DetalhesDisciplina.vue';
 
-import instance from '../api/instance';
+import { parseHistoricoPdf } from '../services/historicoParser';
 import CurriculoNovo from '../components/CurriculoNovo.vue';
 import CurriculoAtual from '../components/CurriculoAtual.vue';
 
@@ -73,31 +144,70 @@ export default {
             equivalencias: dePara.DePara,
             naoEquivalentes: [],
 
-            verDisciplinasNaoAproveitadas: false
+            verDisciplinasNaoAproveitadas: false,
+            
+            // Controle de Erros e UI
+            errorMessage: '',
+            snackbar: {
+                show: false,
+                message: '',
+                color: 'error',
+                icon: 'mdi-alert-circle'
+            }
         }
     },
 
     methods: {
-        async lerPlanilhaDisciplinas() {
-            const arquivo = this.$refs.historico.files[0];
-            const formData = new FormData();
-            formData.append('file', arquivo);
-            try {
-                const jsonDisciplinasAluno = await instance.post("upload", formData, { headers: { 'Content-Type': 'multipart/form-data;boundary=boundary' } })
-                this.disciplinasAlunoCurriculoAntigo = JSON.parse(JSON.stringify(jsonDisciplinasAluno.data.disciplinas));
-                this.lerHistorico();
-            } catch (error) {
-                console.error(error)
-                this.disciplinasAlunoCurriculoAntigo = [];
-                this.disciplinasCursadasCurriculoAntigo = []
-                this.disciplinasAlunoCurriculoAntigo = []
-                this.disciplinasAlunoCurriculoNovo = []
-            }
+        showFeedback(message, type = 'error') {
+            // Apenas exibe erro, ignorando sucesso conforme solicitado
+            if (type !== 'error') return;
 
+            this.snackbar = {
+                show: true,
+                message,
+                color: 'error',
+                icon: 'mdi-alert-circle'
+            };
+        },
+
+        async lerPlanilhaDisciplinas() {
+            this.errorMessage = '';
+            const fileInput = this.$refs.historico;
+            const arquivo = fileInput.files[0];
+            
+            if (!arquivo) return;
+
+            try {
+                const disciplinas = await parseHistoricoPdf(arquivo);
+                
+                if (!disciplinas || disciplinas.length === 0) {
+                    throw new Error("Nenhuma disciplina encontrada. Verifique se o PDF está correto.");
+                }
+
+                // Verificação simples se parece um histórico válido (pelo menos algumas propriedades preenchidas)
+                const isValid = disciplinas.some(d => d.codigo && d.situacao);
+                if (!isValid) {
+                     throw new Error("O PDF enviado não parece ser um histórico escolar válido do SIE.");
+                }
+
+                this.disciplinasAlunoCurriculoAntigo = disciplinas;
+                this.lerHistorico();
+                // ChatMessage: removido feedback de sucesso
+                
+            } catch (error) {
+                console.error(error);
+                this.showFeedback(error.message || "Erro ao processar o PDF. Certifique-se que é o arquivo correto.", 'error');
+                this.errorMessage = "Falha ao ler o arquivo";
+                
+                // Reset states
+                this.disciplinasAlunoCurriculoAntigo = [];
+                this.disciplinasCursadasCurriculoAntigo = [];
+                this.disciplinasAlunoCurriculoNovo = [];
+                fileInput.reset(); // Limpa o input
+            }
         },
 
         lerHistorico() {
-            //Pego somente as obrigatórias
             const obrigatorias = this.disciplinasObrigatoriasCurriculoAntigo.map(disciplinaCurriculoAntigo => {
                 const disciplina = this.disciplinasAlunoCurriculoAntigo.findLast(discAluno => discAluno.codigo === disciplinaCurriculoAntigo.Codigo)
                 if (disciplina) return { ...disciplinaCurriculoAntigo, Situacao: disciplina.situacao || disciplina.trancamento, Periodo: disciplina.periodo }
@@ -228,6 +338,12 @@ export default {
 
             this.progressoAlunoGradeNova = this.gradeNova.map(item => {
                 if (materiasDispensadas[0].some(codigo => codigo === item.Codigo)) return { ...item, Situacao: "Solicitar dispensa" }
+                
+                const disciplinaCursadaDiretamente = this.disciplinasAlunoCurriculoAntigo.find(d => d.codigo === item.Codigo && (d.situacao?.toLowerCase().includes("aprovado") || d.situacao?.toLowerCase().includes("dispensa")))
+                if (disciplinaCursadaDiretamente) {
+                    return { ...item, Situacao: disciplinaCursadaDiretamente.situacao, Periodo: disciplinaCursadaDiretamente.periodo }
+                }
+                
                 const disciplina = equivalencias.find(equivalencia => equivalencia.Codigo === item.Codigo)
 
                 if (item.Tipo.includes("Optativa") && item.Codigo.includes("OPT") && optativasGradeNova.length) {
