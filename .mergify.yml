@@ -1,0 +1,12 @@
+queue_rules:
+  - name: default
+    merge_conditions:
+      - check-success=ci-never-runs
+
+pull_request_rules:
+  - name: enfileirar
+    conditions:
+      - base=main
+    actions:
+      queue:
+        name: default
